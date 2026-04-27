@@ -86,7 +86,8 @@ def filter_and_sort(news_items: list[dict], sent_urls: set, max_age_minutes: int
             continue
 
         pub_time = item.get("published_at")
-
+        if item.get("source") == "BB.lv": # Логгер добавлен для отладки проблем с BB.lv 
+            logger.info(f"  [BB.lv] published_at={pub_time} | {item['title'][:50]}") # Логгер добавлен для отладки проблем с BB.lv
         if pub_time is None:
             # Время неизвестно — пропускаем
             sent_urls.add(item["url"])
