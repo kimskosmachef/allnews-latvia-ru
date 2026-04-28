@@ -216,7 +216,10 @@ def scrape_rss(site: dict) -> list[dict]:
             summary = entry.get("summary", "")
             if summary:
                 summary = BeautifulSoup(summary, "html.parser").get_text(strip=True)[:500]
-
+            
+            if site.get("name") == "BB.lv": #Логгер для BB.lv
+                logger.info(f"  BB.lv: pub={published_at} | title='{title[:40]}'") #Логгер для BB.lv
+            
             if url and url.startswith("http"):
                 results.append({
                     "title": title,
