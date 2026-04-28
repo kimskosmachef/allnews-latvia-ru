@@ -120,6 +120,7 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
     error_count = 0
 
     for item in items_to_send:
+        logger.info(f"Обрабатываю: [{item.get('source')}] {item['title'][:50]}")  # Логгер для BB.lv
         paragraph = item.get("first_paragraph", "")
 
         if is_duplicate(item["title"], paragraph):
