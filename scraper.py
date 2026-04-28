@@ -41,7 +41,8 @@ def parse_pub_time(time_str: str) -> datetime | None:
       "1 час назад"      (bb.lv)
       "2 часа назад"     (bb.lv)
     """
-    now = datetime.now()
+    # Всегда используем латвийское время для корректного сравнения
+    now = datetime.now(RIGA_TZ).replace(tzinfo=None)
     time_str = time_str.strip()
 
     # "Сегодня, HH:MM" или "Сегодня HH:MM"
@@ -216,10 +217,7 @@ def scrape_rss(site: dict) -> list[dict]:
             summary = entry.get("summary", "")
             if summary:
                 summary = BeautifulSoup(summary, "html.parser").get_text(strip=True)[:500]
-            
-            if site.get("name") == "BB.lv": #Логгер для BB.lv
-                logger.info(f"  BB.lv: pub={published_at} | title='{title[:40]}'") #Логгер для BB.lv
-            
+
             if url and url.startswith("http"):
                 results.append({
                     "title": title,
