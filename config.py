@@ -7,7 +7,7 @@ import os
 # Локально: подставляются значения по умолчанию (тестовый бот и канал)
 # На Railway: берутся из переменных окружения (рабочий бот и канал)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8766734182:AAEaWzRUQh_ok34nZNPgNHK-NNEzF8gF898")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 CHANNEL_ID = os.environ.get("CHANNEL_ID", "@kim_test_channel")
 
 # ================================
