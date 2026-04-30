@@ -1,0 +1,15 @@
+old_versions/
+
+git_hub_version/
+prev-version/
+test_channel_version/
+venv/
+sent_urls.json
+
+news_history.json
+
+config.py
+
+__pycache__/
+
+*.pyc
