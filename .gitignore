@@ -1,15 +1,21 @@
-old_versions/
+# Секретные настройки — только локально
+.env
 
+# Файлы состояния бота
+sent_urls.json
+news_history.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# Другие локальные папки
+old_versions/
 git_hub_version/
 prev-version/
 test_channel_version/
-venv/
-sent_urls.json
 
-news_history.json
 
-config.py
 
-__pycache__/
-
-*.pyc
