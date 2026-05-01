@@ -99,7 +99,11 @@ def is_duplicate(title: str, first_paragraph: str = "") -> bool:
         )
 
         if max_similarity >= SIMILARITY_THRESHOLD:
-            logger.info(f"Дубль обнаружен: '{title}'")
+            logger.info(
+                f"Дубль обнаружен (сходство: {max_similarity:.2f}):\n"
+                f"  Новая:     '{title[:80]}'\n"
+                f"  Совпала с: '{history[max_idx]['title'][:80]}'"
+            )
             return True
 
         return False
