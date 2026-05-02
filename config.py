@@ -39,7 +39,7 @@ DUPLICATE_WINDOW_HOURS = 6
 # Чем ниже — тем строже фильтр (больше новостей считается дублями)
 # Чем выше — тем мягче фильтр (меньше новостей считается дублями)
 # Рекомендуемое значение: 0.6
-SIMILARITY_THRESHOLD = 0.25
+SIMILARITY_THRESHOLD = 0.30
 
 # ================================
 # САЙТЫ ДЛЯ ПАРСИНГА
@@ -110,18 +110,18 @@ SITES = [
         "url": "https://rus.delfi.lv/sport/rss/index.xml",
         "base_url": "https://rus.delfi.lv",
     },
-    {
-        "name": "Rus Delfi Дом и сад",
-        "type": "rss",
-        "url": "https://rus.delfi.lv/domsad/rss/index.xml",
-        "base_url": "https://rus.delfi.lv",
-    },    
-    {
-        "name": "Rus Delfi Тургид",
-        "type": "rss",
-        "url": "https://rus.delfi.lv/turgid/rss/index.xml",
-        "base_url": "https://rus.delfi.lv",
-    },
+#    {
+#        "name": "Rus Delfi Дом и сад",
+#        "type": "rss",
+#        "url": "https://rus.delfi.lv/domsad/rss/index.xml",
+#        "base_url": "https://rus.delfi.lv",
+#    },    
+#    {
+#        "name": "Rus Delfi Тургид",
+#        "type": "rss",
+#        "url": "https://rus.delfi.lv/turgid/rss/index.xml",
+#        "base_url": "https://rus.delfi.lv",
+#    },
     {
         "name": "Rus Delfi Прогноз погоды",
         "type": "rss",
@@ -145,3 +145,31 @@ SITES = [
     #     "base_url": "https://example.com",
     # },
 ]
+
+# ================================
+# НАСТРОЙКИ ФИЛЬТРАЦИИ ПО URL С ОТДЕЛЬНЫХ САЙТОВ
+# ================================
+
+URL_FILTERS_ENABLED = True   # включить/выключить одной строкой, для отключения - URL_FILTERS_ENABLED = False
+
+URL_FILTERS = {
+    "BB.lv": [
+        "/statja/v-mire/",  # международные новости — не публикуем
+        "/statja/lifenews/",    # хрень не публикуем
+        "/statja/v-mire-zhivotnyh/", # про животных не публикуем
+        "/statja/ljublju/",  # про моду не публикуем
+        "/statja/tehno/", #типа науку не публикуем
+        "/statja/eda-i-recepty/", #еду не публикуем
+        "/statja/dom-i-sad/", #дом и сад пропускаем
+    ],
+    "Mixnews": [
+        "mixnews.lv/v-mire/", # международные новости - не публикуем
+    ],
+    "Rus Jauns": [
+        "/article/lifestyle/", # лайфстайл не публикуем
+    ],
+    "Rus Delfi": [
+        "/v-mire/", # международку не публикуем
+    ]
+    
+}

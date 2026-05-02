@@ -15,6 +15,7 @@ from config import (
 from scraper import scrape_all_sites
 from storage import load_sent_urls, save_sent_urls
 from duplicate_checker import is_duplicate, save_to_history
+from url_filter import is_filtered
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,8 +87,7 @@ def filter_and_sort(news_items: list[dict], sent_urls: set, max_age_minutes: int
             continue
 
         pub_time = item.get("published_at")
-        if item.get("source") == "BB.lv": # Логгер добавлен для отладки проблем с BB.lv 
-            logger.info(f"  [BB.lv] published_at={pub_time} | {item['title'][:50]}") # Логгер добавлен для отладки проблем с BB.lv
+
         if pub_time is None:
             # Время неизвестно — пропускаем
             sent_urls.add(item["url"])
@@ -120,8 +120,12 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
     error_count = 0
 
     for item in items_to_send:
-        logger.info(f"Обрабатываю: [{item.get('source')}] {item['title'][:50]}")  # Логгер для BB.lv
         paragraph = item.get("first_paragraph", "")
+
+        # Проверяем фильтр URL
+        if is_filtered(item["url"], item.get("source", "")):
+            sent_urls.add(item["url"])
+            continue
 
         if is_duplicate(item["title"], paragraph):
             logger.info(f"Дубль, пропускаю: {item['title']}")
