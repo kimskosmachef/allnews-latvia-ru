@@ -17,5 +17,8 @@ git_hub_version/
 prev-version/
 test_channel_version/
 
+#Файл лога для отладки
+debug.txt
+
 
 
