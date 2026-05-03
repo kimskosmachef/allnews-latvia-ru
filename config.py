@@ -179,6 +179,9 @@ URL_FILTERS = {
     ],
     "Rus Delfi": [
         "/v-mire/", # международку не публикуем
+    ],
+    "Rus LSM":  [
+        "statja/novosti/mir/", # международку не публикуем
     ]
 }
 
