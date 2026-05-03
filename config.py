@@ -44,7 +44,7 @@ DUPLICATE_WINDOW_HOURS = 6
 # Для TF-IDF рекомендуется: 0.6
 # Для sentence-transformers рекомендуется: 0.75
 # (sentence-transformers даёт более высокие значения для похожих текстов)
-SIMILARITY_THRESHOLD = 0.75
+SIMILARITY_THRESHOLD = 0.55
 
 # ================================
 # САЙТЫ ДЛЯ ПАРСИНГА
