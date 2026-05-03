@@ -34,6 +34,8 @@ def is_filtered_by_section(sections: list[str], source: str) -> bool:
         return False
 
     forbidden = SECTION_FILTERS.get(source, [])
+    
+    
     for section in sections:
         for pattern in forbidden:
             if pattern in section:

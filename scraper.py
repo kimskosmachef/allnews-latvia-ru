@@ -211,7 +211,7 @@ def fetch_article_data(url: str) -> tuple[str, list[str]]:
 
     except Exception as e:
         logger.warning(f"Не удалось получить данные для {url}: {e}")
-
+    
     return paragraph, sections
 
 
@@ -351,7 +351,9 @@ def scrape_site(site: dict) -> list[dict]:
     # Заходим на каждую статью за первым абзацем (если сайт это разрешает)
     if site.get("fetch_paragraph", True):
         for item in results:
-            item["first_paragraph"] = fetch_first_paragraph(item["url"])
+            paragraph, sections = fetch_article_data(item["url"])
+            item["first_paragraph"] = paragraph
+            item["sections"] = sections
             time.sleep(0.5)
     else:
         logger.info(f"[{site['name']}] Пропускаю загрузку абзацев (fetch_paragraph=False)")
