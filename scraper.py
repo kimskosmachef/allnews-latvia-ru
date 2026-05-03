@@ -101,6 +101,7 @@ def parse_pub_time(time_str: str) -> datetime | None:
 def split_mixnews_title(raw: str) -> tuple[str, datetime | None]:
     """
     Разделяет строку вида "19:00 Заголовок" или "19:00Заголовок" на время и заголовок.
+    Если полученное время в будущем — значит это вчерашняя новость.
     Возвращает (заголовок, published_at).
     """
     match = re.match(r"^(\d{1,2}:\d{2})\s*(.+)$", raw.strip())
@@ -108,6 +109,11 @@ def split_mixnews_title(raw: str) -> tuple[str, datetime | None]:
         time_str = match.group(1)
         title = match.group(2).strip()
         published_at = parse_pub_time(time_str)
+        # Если время в будущем — это вчерашняя новость
+        if published_at:
+            now = datetime.now(RIGA_TZ).replace(tzinfo=None)
+            if published_at > now:
+                published_at = published_at - timedelta(days=1)
         return title, published_at
     return raw.strip(), None
 
@@ -167,13 +173,29 @@ def extract_title(link) -> str:
 # Вспомогательные функции
 # ──────────────────────────────────────────────
 
-def fetch_first_paragraph(url: str) -> str:
-    """Заходит на страницу статьи и возвращает первый абзац"""
+def fetch_article_data(url: str) -> tuple[str, list[str]]:
+    """
+    Заходит на страницу статьи и возвращает:
+    - первый абзац текста
+    - список рубрик из хлебных крошек (breadcrumbs) в формате ['/section/4368', ...]
+    """
+    paragraph = ""
+    sections = []
     try:
         response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
 
+        # Извлекаем рубрики из хлебных крошек
+        for a in soup.find_all("a", href=True):
+            href = a.get("href", "")
+            if "/section/" in href:
+                # Берём только путь без домена
+                path = "/" + href.split("/", 3)[-1] if href.startswith("http") else href
+                if path not in sections:
+                    sections.append(path)
+
+        # Извлекаем первый абзац
         candidates = [
             "article p", ".article-body p", ".article__body p",
             ".content p", ".text p", ".entry-content p", "main p", "p",
@@ -182,11 +204,21 @@ def fetch_first_paragraph(url: str) -> str:
             for p in soup.select(selector):
                 text = p.get_text(strip=True)
                 if len(text) > 60:
-                    return text[:500]
-    except Exception as e:
-        logger.warning(f"Не удалось получить абзац для {url}: {e}")
+                    paragraph = text[:500]
+                    break
+            if paragraph:
+                break
 
-    return ""
+    except Exception as e:
+        logger.warning(f"Не удалось получить данные для {url}: {e}")
+
+    return paragraph, sections
+
+
+def fetch_first_paragraph(url: str) -> str:
+    """Обратная совместимость — возвращает только абзац"""
+    paragraph, _ = fetch_article_data(url)
+    return paragraph
 
 
 # ──────────────────────────────────────────────
@@ -304,6 +336,7 @@ def scrape_site(site: dict) -> list[dict]:
                 "title": title,
                 "url": full_url,
                 "first_paragraph": "",
+                "sections": [],
                 "published_at": published_at,
                 "source": site["name"],
             })

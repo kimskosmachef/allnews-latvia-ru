@@ -15,7 +15,7 @@ from config import (
 from scraper import scrape_all_sites
 from storage import load_sent_urls, save_sent_urls
 from duplicate_checker import is_duplicate, save_to_history
-from url_filter import is_filtered, refresh_section_cache
+from url_filter import is_filtered
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,9 +106,6 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
     mode = get_current_mode()
     logger.info(f"Проверяю новости... [{mode['name']} режим]")
 
-    # Обновляем кэш заголовков рубрик перед проверкой новостей
-    refresh_section_cache()
-
     sent_urls = load_sent_urls()
     all_items = scrape_all_sites()
     items_to_send = filter_and_sort(all_items, sent_urls, mode["max_age"])
@@ -126,7 +123,7 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
         paragraph = item.get("first_paragraph", "")
 
         # Проверяем фильтры URL и рубрик
-        if is_filtered(item["url"], item["title"], item.get("source", "")):
+        if is_filtered(item["url"], item["title"], item.get("source", ""), item.get("sections", [])):
             sent_urls.add(item["url"])
             continue
 

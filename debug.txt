@@ -1,0 +1,53 @@
+2026-05-03 07:27:22,543 [INFO] Запускаю бота...
+2026-05-03 07:27:24,519 [INFO] HTTP Request: POST https://api.telegram.org/bot8542721976:AAEzDVPE9V5UGSBw-GJoGviwyoE6bHs5lCg/getMe "HTTP/1.1 200 OK"
+2026-05-03 07:27:24,524 [INFO] Бот подключён: @test_allnewslv_bot
+2026-05-03 07:27:24,527 [INFO] Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-03 07:27:24,529 [INFO] Added job "check_and_send_news" to job store "default"
+2026-05-03 07:27:24,530 [INFO] Scheduler started
+2026-05-03 07:27:24,530 [INFO] Планировщик запущен. [дневной режим] Проверка каждые 10 мин. | Период новостей: 20 мин.
+2026-05-03 07:27:24,530 [INFO] Проверяю новости... [дневной режим]
+2026-05-03 07:27:25,632 [INFO] [BB.lv] Найдено 15 ссылок
+2026-05-03 07:27:25,632 [INFO] [BB.lv] Пропускаю загрузку абзацев (fetch_paragraph=False)
+2026-05-03 07:27:26,714 [INFO] [Mixnews] Найдено 20 ссылок
+2026-05-03 07:28:05,525 [INFO] [RUS TVNET] Найдено 24 ссылок
+2026-05-03 07:28:46,362 [INFO] [Rus Jauns] Найдено 99 ссылок
+2026-05-03 07:28:46,362 [INFO] [Rus Jauns] Пропускаю загрузку абзацев (fetch_paragraph=False)
+2026-05-03 07:28:47,194 [INFO] [Rus LSM] RSS: получено 50 новостей
+2026-05-03 07:28:47,590 [INFO] [Rus Delfi] RSS: получено 50 новостей
+2026-05-03 07:28:47,956 [INFO] [Rus Delfi Бизнес] RSS: получено 50 новостей
+2026-05-03 07:28:48,329 [INFO] [Rus Delfi Life] RSS: получено 50 новостей
+2026-05-03 07:28:48,686 [INFO] [Rus Delfi Спорт] RSS: получено 50 новостей
+2026-05-03 07:28:49,067 [INFO] [Rus Delfi Прогноз погоды] RSS: получено 50 новостей
+2026-05-03 07:28:49,068 [INFO] Всего найдено: 458 | Свежих для публикации: 2
+2026-05-03 07:28:49,270 [INFO] HTTP Request: POST https://api.telegram.org/bot8542721976:AAEzDVPE9V5UGSBw-GJoGviwyoE6bHs5lCg/sendMessage "HTTP/1.1 200 OK"
+2026-05-03 07:28:49,276 [INFO] Опубликовано [07:17] [BB.lv]: В Австрия задержали подозреваемого в отравлении детского питания Hipp
+2026-05-03 07:28:52,290 [INFO] Фильтр URL сработал: '/statja/ljublju/' найден в https://bb.lv/statja/ljublju/2026/05/03/est-li-cislo-sudby-v-vasei-date-rozdeniia-i-cto-o-nem-govoriat-numerologi
+  Источник: BB.lv — новость пропущена
+2026-05-03 07:28:52,294 [INFO] Готово — опубликовано: 1 | дублей пропущено: 0 | ошибок: 0
+2026-05-03 07:28:52,294 [INFO] Следующая проверка через 10 мин. [дневной режим]
+Traceback (most recent call last):
+  File "C:\Users\Zoja\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Zoja\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "c:\newsbot\bot.py", line 207, in main
+    await asyncio.Event().wait()
+  File "C:\Users\Zoja\AppData\Local\Programs\Python\Python313\Lib\asyncio\locks.py", line 213, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\newsbot\bot.py", line 215, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Zoja\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Zoja\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt
+^C
