@@ -187,14 +187,13 @@ def fetch_article_data(url: str) -> tuple[str, list[str]]:
         soup = BeautifulSoup(response.text, "html.parser")
 
         # Извлекаем рубрики из хлебных крошек
-        for a in soup.find_all("a", href=True):
+        for a in soup.find_all("a", itemprop="item", href=True):
             href = a.get("href", "")
             if "/section/" in href:
-                # Берём только путь без домена
                 path = "/" + href.split("/", 3)[-1] if href.startswith("http") else href
                 if path not in sections:
                     sections.append(path)
-
+        logger.info(f"Секции для {url}: {sections}")  # ← добавь эту строку
         # Извлекаем первый абзац
         candidates = [
             "article p", ".article-body p", ".article__body p",

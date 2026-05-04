@@ -123,6 +123,7 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
         paragraph = item.get("first_paragraph", "")
 
         # Проверяем фильтры URL и рубрик
+        logger.info(f"Проверяю фильтр: source={item.get('source')}, sections={item.get('sections', [])}") #логгер для отладки
         if is_filtered(item["url"], item["title"], item.get("source", ""), item.get("sections", [])):
             sent_urls.add(item["url"])
             continue
