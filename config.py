@@ -20,7 +20,7 @@ CHANNEL_ID = os.environ.get("CHANNEL_ID", "")
 
 # Дневной режим (07:00 — 01:00)
 CHECK_INTERVAL_MINUTES = 10        # как часто проверять (минуты)
-NEWS_MAX_AGE_MINUTES = 20          # за какой период брать новости (минуты)
+NEWS_MAX_AGE_MINUTES = 120          # за какой период брать новости (минуты)
 
 # Ночной режим (01:00 — 07:00)
 NIGHT_MODE_START = 1               # час начала ночного режима (по латвийскому времени)
@@ -177,9 +177,9 @@ URL_FILTERS = {
     "Rus Jauns": [
         "/article/lifestyle/", # лайфстайл не публикуем
     ],
-#    "Rus Delfi": [
-#       "/v-mire/", # международку не публикуем
-#    ],
+    "Rus Delfi": [
+       "/v-mire/", # международку не публикуем
+    ],
     "Rus LSM":  [
         "statja/novosti/mir/", # международку не публикуем
     ]
