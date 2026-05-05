@@ -24,7 +24,7 @@ def get_st_model():
     if _st_model is None:
         logger.info("Загружаю модель sentence-transformers (первый запуск может занять 1-2 минуты)...")
         from sentence_transformers import SentenceTransformer
-        _st_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+        _st_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
         logger.info("Модель sentence-transformers загружена успешно")
     return _st_model
 
