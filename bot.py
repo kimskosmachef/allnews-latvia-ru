@@ -17,6 +17,8 @@ from storage import load_sent_urls, save_sent_urls
 from duplicate_checker import is_duplicate, save_to_history
 from url_filter import is_filtered
 
+logger.info(f"DUPLICATE_METHOD из окружения: {os.environ.get('DUPLICATE_METHOD', 'НЕ ЗАДАНА')}")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
