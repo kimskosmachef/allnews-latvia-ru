@@ -136,7 +136,7 @@ def extract_title(link) -> str:
         if title:
             return title
 
-    # 2. Берём из атрибута alt картинки (bb.lv)
+    # 2. Берём из атрибута alt картинки — только если начинается с правильного префикса (bb.lv)
     # Формат: "Изображение к статье: Заголовок новости"
     img = link.find("img")
     if img:
@@ -144,8 +144,6 @@ def extract_title(link) -> str:
         prefix = "Изображение к статье: "
         if alt.startswith(prefix):
             title = alt[len(prefix):].strip()
-        elif alt and not alt.startswith("http"):
-            title = alt
         if title:
             return title
 
@@ -173,14 +171,16 @@ def extract_title(link) -> str:
 # Вспомогательные функции
 # ──────────────────────────────────────────────
 
-def fetch_article_data(url: str) -> tuple[str, list[str]]:
+def fetch_article_data(url: str) -> tuple[str, list[str], str]:
     """
     Заходит на страницу статьи и возвращает:
     - первый абзац текста
     - список рубрик из хлебных крошек (breadcrumbs) в формате ['/section/4368', ...]
+    - заголовок из h1 (для bb.lv, очищенный от цифр в конце)
     """
     paragraph = ""
     sections = []
+    h1_title = ""
     try:
         response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
@@ -193,7 +193,13 @@ def fetch_article_data(url: str) -> tuple[str, list[str]]:
                 path = "/" + href.split("/", 3)[-1] if href.startswith("http") else href
                 if path not in sections:
                     sections.append(path)
-        logger.info(f"Секции для {url}: {sections}")  # ← добавь эту строку
+        logger.info(f"Секции для {url}: {sections}")
+
+        # Извлекаем заголовок из h1 (bb.lv — цифры счётчика просмотров в конце убираем)
+        h1 = soup.find("h1")
+        if h1:
+            h1_title = re.sub(r'\d+$', '', h1.get_text(strip=True)).strip()
+
         # Извлекаем первый абзац
         candidates = [
             "article p", ".article-body p", ".article__body p",
@@ -210,13 +216,13 @@ def fetch_article_data(url: str) -> tuple[str, list[str]]:
 
     except Exception as e:
         logger.warning(f"Не удалось получить данные для {url}: {e}")
-    
-    return paragraph, sections
+
+    return paragraph, sections, h1_title
 
 
 def fetch_first_paragraph(url: str) -> str:
     """Обратная совместимость — возвращает только абзац"""
-    paragraph, _ = fetch_article_data(url)
+    paragraph, _, _ = fetch_article_data(url)
     return paragraph
 
 
@@ -350,9 +356,12 @@ def scrape_site(site: dict) -> list[dict]:
     # Заходим на каждую статью за первым абзацем (если сайт это разрешает)
     if site.get("fetch_paragraph", True):
         for item in results:
-            paragraph, sections = fetch_article_data(item["url"])
+            paragraph, sections, h1_title = fetch_article_data(item["url"])
             item["first_paragraph"] = paragraph
             item["sections"] = sections
+            # Для bb.lv заменяем заголовок на h1 со страницы статьи
+            if h1_title and item.get("source") == "BB.lv":
+                item["title"] = h1_title
             time.sleep(0.5)
     else:
         logger.info(f"[{site['name']}] Пропускаю загрузку абзацев (fetch_paragraph=False)")

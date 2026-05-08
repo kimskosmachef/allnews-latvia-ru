@@ -20,7 +20,7 @@ CHANNEL_ID = os.environ.get("CHANNEL_ID", "")
 
 # Дневной режим (07:00 — 01:00)
 CHECK_INTERVAL_MINUTES = 10        # как часто проверять (минуты)
-NEWS_MAX_AGE_MINUTES = 30          # за какой период брать новости (минуты)
+NEWS_MAX_AGE_MINUTES = 30          # для сурверной версии - 30 минут, за какой период брать новости (минуты)
 
 # Ночной режим (01:00 — 07:00)
 NIGHT_MODE_START = 1               # час начала ночного режима (по латвийскому времени)
@@ -44,7 +44,7 @@ DUPLICATE_WINDOW_HOURS = 6
 # Для TF-IDF рекомендуется: 0.6
 # Для sentence-transformers рекомендуется: 0.75
 # (sentence-transformers даёт более высокие значения для похожих текстов)
-SIMILARITY_THRESHOLD = 0.70
+SIMILARITY_THRESHOLD = 0.75
 
 # ================================
 # САЙТЫ ДЛЯ ПАРСИНГА
@@ -56,7 +56,7 @@ SITES = [
         "url": "https://bb.lv/line",
         "article_selector": "a[href*='/statja/']",
         "base_url": "https://bb.lv",
-        "fetch_paragraph": False,
+        "fetch_paragraph": True,
     },
     {
         "name": "Mixnews",
