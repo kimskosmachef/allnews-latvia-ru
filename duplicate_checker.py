@@ -50,13 +50,18 @@ def load_history() -> list[dict]:
         return []
 
 
-def save_to_history(title: str, url: str, first_paragraph: str = ""):
+def save_to_history(title: str, url: str, first_paragraph: str = "",
+                    source: str = "", message_id: int = None,
+                    published_time: str = ""):
     """Добавляет опубликованную новость в историю"""
     history = load_history()
     history.append({
         "title": title,
         "url": url,
         "first_paragraph": first_paragraph,
+        "source": source,
+        "message_id": message_id,
+        "published_time": published_time,
         "published_at": datetime.now().isoformat()
     })
     try:
@@ -79,10 +84,10 @@ def build_text(title: str, paragraph: str) -> str:
 # Метод 1: TF-IDF
 # ──────────────────────────────────────────────
 
-def check_tfidf(title: str, first_paragraph: str, history: list[dict]) -> tuple[bool, float, str]:
+def check_tfidf(title: str, first_paragraph: str, history: list[dict]) -> tuple[bool, float, dict]:
     """
     Проверка дублей через TF-IDF.
-    Возвращает (is_duplicate, max_similarity, most_similar_title)
+    Возвращает (is_duplicate, max_similarity, most_similar_item)
     """
     new_text = build_text(title, first_paragraph)
     history_texts = [
@@ -98,21 +103,21 @@ def check_tfidf(title: str, first_paragraph: str, history: list[dict]) -> tuple[
         similarities = cosine_similarity(new_vec, existing_vecs)[0]
         max_idx = similarities.argmax()
         max_similarity = float(similarities[max_idx])
-        most_similar = history[max_idx]["title"]
-        return max_similarity >= SIMILARITY_THRESHOLD, max_similarity, most_similar
+        most_similar_item = history[max_idx]
+        return max_similarity >= SIMILARITY_THRESHOLD, max_similarity, most_similar_item
     except Exception as e:
         logger.error(f"Ошибка TF-IDF: {e}")
-        return False, 0.0, ""
+        return False, 0.0, {}
 
 
 # ──────────────────────────────────────────────
 # Метод 2: Sentence-Transformers
 # ──────────────────────────────────────────────
 
-def check_sentence_transformers(title: str, first_paragraph: str, history: list[dict]) -> tuple[bool, float, str]:
+def check_sentence_transformers(title: str, first_paragraph: str, history: list[dict]) -> tuple[bool, float, dict]:
     """
     Проверка дублей через sentence-transformers (семантическое сходство).
-    Возвращает (is_duplicate, max_similarity, most_similar_title)
+    Возвращает (is_duplicate, max_similarity, most_similar_item)
     """
     try:
         model = get_st_model()
@@ -133,44 +138,63 @@ def check_sentence_transformers(title: str, first_paragraph: str, history: list[
         similarities = cosine_similarity(new_embedding, history_embeddings)[0]
         max_idx = similarities.argmax()
         max_similarity = float(similarities[max_idx])
-        most_similar = history[max_idx]["title"]
+        most_similar_item = history[max_idx]
 
-        return max_similarity >= SIMILARITY_THRESHOLD, max_similarity, most_similar
+        return max_similarity >= SIMILARITY_THRESHOLD, max_similarity, most_similar_item
 
     except Exception as e:
         logger.error(f"Ошибка sentence-transformers: {e}")
-        return False, 0.0, ""
+        return False, 0.0, {}
 
 
 # ──────────────────────────────────────────────
 # Главная функция проверки
 # ──────────────────────────────────────────────
 
-def is_duplicate(title: str, first_paragraph: str = "") -> bool:
+def is_duplicate(title: str, first_paragraph: str = "") -> dict:
     """
     Проверяет является ли новость дублём.
     Метод определяется параметром DUPLICATE_METHOD в config.py:
       "tfidf"               — TF-IDF (быстро, без доп. зависимостей)
       "sentence_transformers" — семантическое сходство (точнее, понимает смысл)
+
+    Возвращает словарь:
+      {
+        "is_duplicate": bool,
+        "similarity": float,
+        "most_similar_title": str,
+        "most_similar_source": str,
+        "most_similar_time": str,
+        "most_similar_message_id": int | None,
+      }
     """
     history = load_history()
     if not history:
-        return False
+        return {
+            "is_duplicate": False,
+            "similarity": 0.0,
+            "most_similar_title": "",
+            "most_similar_source": "",
+            "most_similar_time": "",
+            "most_similar_message_id": None,
+        }
 
     if DUPLICATE_METHOD == "sentence_transformers":
-        is_dup, similarity, most_similar = check_sentence_transformers(
+        is_dup, similarity, most_similar_item = check_sentence_transformers(
             title, first_paragraph, history
         )
         method_label = "Sentence-Transformers"
     else:
-        is_dup, similarity, most_similar = check_tfidf(
+        is_dup, similarity, most_similar_item = check_tfidf(
             title, first_paragraph, history
         )
         method_label = "TF-IDF"
 
+    most_similar_title = most_similar_item.get("title", "")
+
     logger.info(
         f"{method_label} сходство: {similarity:.2f} | "
-        f"'{title[:60]}' vs '{most_similar[:60]}'"
+        f"'{title[:60]}' vs '{most_similar_title[:60]}'"
     )
 
     if is_dup:
@@ -178,7 +202,14 @@ def is_duplicate(title: str, first_paragraph: str = "") -> bool:
             f"Дубль обнаружен [{method_label}] "
             f"(сходство: {similarity:.2f}, порог: {SIMILARITY_THRESHOLD}):\n"
             f"  Новая:     '{title[:80]}'\n"
-            f"  Совпала с: '{most_similar[:80]}'"
+            f"  Совпала с: '{most_similar_title[:80]}'"
         )
 
-    return is_dup
+    return {
+        "is_duplicate": is_dup,
+        "similarity": similarity,
+        "most_similar_title": most_similar_title,
+        "most_similar_source": most_similar_item.get("source", ""),
+        "most_similar_time": most_similar_item.get("published_time", ""),
+        "most_similar_message_id": most_similar_item.get("message_id"),
+    }

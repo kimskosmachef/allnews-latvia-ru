@@ -10,7 +10,9 @@ from config import (
     BOT_TOKEN, CHANNEL_ID,
     CHECK_INTERVAL_MINUTES, NEWS_MAX_AGE_MINUTES,
     NIGHT_MODE_START, NIGHT_MODE_END,
-    NIGHT_CHECK_INTERVAL_MINUTES, NIGHT_NEWS_MAX_AGE_MINUTES
+    NIGHT_CHECK_INTERVAL_MINUTES, NIGHT_NEWS_MAX_AGE_MINUTES,
+    RELATED_NEWS_ENABLED, RELATED_NEWS_RANGE_BELOW, RELATED_NEWS_RANGE_ABOVE,
+    SIMILARITY_THRESHOLD, CHANNEL_USERNAME
 )
 from scraper import scrape_all_sites
 from storage import load_sent_urls, save_sent_urls
@@ -47,17 +49,20 @@ def get_current_mode() -> dict:
     }
 
 
-async def send_with_retry(bot: Bot, chat_id: str, text: str, retries: int = 3) -> bool:
-    """Отправляет сообщение с повтором при ошибке Flood control"""
+async def send_with_retry(bot: Bot, chat_id: str, text: str, retries: int = 3) -> int | None:
+    """
+    Отправляет сообщение с повтором при ошибке Flood control.
+    Возвращает message_id успешно отправленного сообщения или None при ошибке.
+    """
     for attempt in range(retries):
         try:
-            await bot.send_message(
+            msg = await bot.send_message(
                 chat_id=chat_id,
                 text=text,
                 parse_mode="HTML",
                 disable_web_page_preview=False
             )
-            return True
+            return msg.message_id
 
         except RetryAfter as e:
             wait = e.retry_after + 2
@@ -69,9 +74,9 @@ async def send_with_retry(bot: Bot, chat_id: str, text: str, retries: int = 3) -
             if attempt < retries - 1:
                 await asyncio.sleep(5)
             else:
-                return False
+                return None
 
-    return False
+    return None
 
 
 def filter_and_sort(news_items: list[dict], sent_urls: set, max_age_minutes: int) -> list[dict]:
@@ -103,6 +108,41 @@ def filter_and_sort(news_items: list[dict], sent_urls: set, max_age_minutes: int
     return fresh
 
 
+def build_related_line(result: dict) -> str:
+    """
+    Формирует строку 'Ранее по теме' если найдена похожая новость
+    в диапазоне (порог - BELOW) до (порог + ABOVE).
+    Возвращает пустую строку если условия не выполнены.
+    """
+    if not RELATED_NEWS_ENABLED:
+        return ""
+
+    similarity = result["similarity"]
+    low = SIMILARITY_THRESHOLD - RELATED_NEWS_RANGE_BELOW
+    high = SIMILARITY_THRESHOLD + RELATED_NEWS_RANGE_ABOVE
+
+    if not (low <= similarity <= high):
+        return ""
+
+    message_id = result.get("most_similar_message_id")
+    if not message_id:
+        return ""
+
+    tg_url = f"https://t.me/{CHANNEL_USERNAME}/{message_id}"
+    related_time = result.get("most_similar_time", "")
+    related_title = result.get("most_similar_title", "")
+    related_source = result.get("most_similar_source", "")
+
+    parts = [p for p in [related_time, related_title, related_source] if p]
+    related_text = " | ".join(parts)
+
+    logger.info(
+        f"Добавляю 'Ранее по теме' (сходство: {similarity:.2f}): {related_text}"
+    )
+
+    return f'\n\n🔁 <b>Ранее по теме:</b> <a href="{tg_url}">{related_text}</a>'
+
+
 async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
     mode = get_current_mode()
     logger.info(f"Проверяю новости... [{mode['name']} режим]")
@@ -118,18 +158,21 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
 
     new_count = 0
     duplicate_count = 0
+    related_count = 0
     error_count = 0
 
     for item in items_to_send:
         paragraph = item.get("first_paragraph", "")
 
         # Проверяем фильтры URL и рубрик
-        logger.info(f"Проверяю фильтр: source={item.get('source')}, sections={item.get('sections', [])}") #логгер для отладки
+        logger.info(f"Проверяю фильтр: source={item.get('source')}, sections={item.get('sections', [])}")
         if is_filtered(item["url"], item["title"], item.get("source", ""), item.get("sections", [])):
             sent_urls.add(item["url"])
             continue
 
-        if is_duplicate(item["title"], paragraph):
+        result = is_duplicate(item["title"], paragraph)
+
+        if result["is_duplicate"]:
             logger.info(f"Дубль, пропускаю: {item['title']}")
             duplicate_count += 1
             sent_urls.add(item["url"])
@@ -140,13 +183,26 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
         source_str = item.get("source", "")
 
         header = f"🕐 {time_str} | {source_str}" if time_str else f"📡 {source_str}"
-        message = f"{header}\n\n📰 <b>{item['title']}</b>\n\n🔗 {item['url']}"
 
-        success = await send_with_retry(bot, CHANNEL_ID, message)
+        # Строка "Ранее по теме" если есть похожая новость в нужном диапазоне
+        related_line = build_related_line(result)
+        if related_line:
+            related_count += 1
 
-        if success:
+        message = f"{header}\n\n📰 <b>{item['title']}</b>\n\n🔗 {item['url']}{related_line}"
+
+        message_id = await send_with_retry(bot, CHANNEL_ID, message)
+
+        if message_id:
             sent_urls.add(item["url"])
-            save_to_history(item["title"], item["url"], paragraph)
+            save_to_history(
+                title=item["title"],
+                url=item["url"],
+                first_paragraph=paragraph,
+                source=source_str,
+                message_id=message_id,
+                published_time=time_str,
+            )
             new_count += 1
             logger.info(f"Опубликовано [{time_str}] [{source_str}]: {item['title']}")
         else:
@@ -157,6 +213,7 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
     save_sent_urls(sent_urls)
     logger.info(
         f"Готово — опубликовано: {new_count} | "
+        f"с пометкой 'Ранее по теме': {related_count} | "
         f"дублей пропущено: {duplicate_count} | "
         f"ошибок: {error_count}"
     )

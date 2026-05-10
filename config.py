@@ -20,7 +20,7 @@ CHANNEL_ID = os.environ.get("CHANNEL_ID", "")
 
 # Дневной режим (07:00 — 01:00)
 CHECK_INTERVAL_MINUTES = 10        # как часто проверять (минуты)
-NEWS_MAX_AGE_MINUTES = 30          # для сурверной версии - 30 минут, за какой период брать новости (минуты)
+NEWS_MAX_AGE_MINUTES = 30          # для серверной версии - 30 минут, за какой период брать новости (минуты)
 
 # Ночной режим (01:00 — 07:00)
 NIGHT_MODE_START = 1               # час начала ночного режима (по латвийскому времени)
@@ -42,9 +42,16 @@ DUPLICATE_WINDOW_HOURS = 6
 
 # Порог сходства от 0 до 1:
 # Для TF-IDF рекомендуется: 0.6
-# Для sentence-transformers рекомендуется: 0.75
+# Для sentence-transformers рекомендуется: 0.75 - такую величину я использую для серверной версии
 # (sentence-transformers даёт более высокие значения для похожих текстов)
 SIMILARITY_THRESHOLD = 0.75
+
+# Параметры для публикации частичных дублей с указанием похожей новости
+# и пометки "Ранее по теме:
+RELATED_NEWS_ENABLED = True
+RELATED_NEWS_RANGE_BELOW = 0.05
+RELATED_NEWS_RANGE_ABOVE = 0.05
+CHANNEL_USERNAME = "vse_novosti_lv"  # для тестирования - kim_test_channel, для продакшна - vse_novosti_lv
 
 # ================================
 # САЙТЫ ДЛЯ ПАРСИНГА
