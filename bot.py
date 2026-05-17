@@ -172,7 +172,7 @@ async def check_and_send_news(bot: Bot, scheduler: AsyncIOScheduler):
 
         result = is_duplicate(item["title"], paragraph)
 
-        if result["is_duplicate"]:
+        if result["similarity"] > SIMILARITY_THRESHOLD + RELATED_NEWS_RANGE_ABOVE:
             logger.info(f"Дубль, пропускаю: {item['title']}")
             duplicate_count += 1
             sent_urls.add(item["url"])
