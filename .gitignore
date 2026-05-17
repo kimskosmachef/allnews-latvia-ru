@@ -22,3 +22,15 @@ debug.txt
 
 
 
+# System files (project lives in /home/newsbot, so user dotfiles appear here)
+.bash_history
+.bashrc
+.bash_logout
+.cache/
+.claude.json
+.claude/
+.local/
+.ssh/
+.sudo_as_admin_successful
+.profile
+.viminfo
