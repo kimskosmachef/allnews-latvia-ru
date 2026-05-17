@@ -34,3 +34,5 @@ debug.txt
 .sudo_as_admin_successful
 .profile
 .viminfo
+.gitconfig
+.lesshst
